@@ -104,9 +104,9 @@ class ForagingEnv(gym.Env):
         self.penalty = penalty
 
         if isinstance(min_food_level, Iterable):
-            assert (
-                len(min_food_level) == max_num_food
-            ), "min_food_level must be a scalar or a list of length max_num_food"
+            assert len(min_food_level) == max_num_food, (
+                "min_food_level must be a scalar or a list of length max_num_food"
+            )
             self.min_food_level = np.array(min_food_level)
         else:
             self.min_food_level = np.array([min_food_level] * max_num_food)
@@ -114,9 +114,9 @@ class ForagingEnv(gym.Env):
         if max_food_level is None:
             self.max_food_level = None
         elif isinstance(max_food_level, Iterable):
-            assert (
-                len(max_food_level) == max_num_food
-            ), "max_food_level must be a scalar or a list of length max_num_food"
+            assert len(max_food_level) == max_num_food, (
+                "max_food_level must be a scalar or a list of length max_num_food"
+            )
             self.max_food_level = np.array(max_food_level)
         else:
             self.max_food_level = np.array([max_food_level] * max_num_food)
@@ -126,25 +126,25 @@ class ForagingEnv(gym.Env):
             for min_food_level, max_food_level in zip(
                 self.min_food_level, self.max_food_level
             ):
-                assert (
-                    min_food_level <= max_food_level
-                ), "min_food_level must be less than or equal to max_food_level for each food"
+                assert min_food_level <= max_food_level, (
+                    "min_food_level must be less than or equal to max_food_level for each food"
+                )
 
         self.max_num_food = max_num_food
         self._food_spawned = 0.0
 
         if isinstance(min_player_level, Iterable):
-            assert (
-                len(min_player_level) == players
-            ), "min_player_level must be a scalar or a list of length players"
+            assert len(min_player_level) == players, (
+                "min_player_level must be a scalar or a list of length players"
+            )
             self.min_player_level = np.array(min_player_level)
         else:
             self.min_player_level = np.array([min_player_level] * players)
 
         if isinstance(max_player_level, Iterable):
-            assert (
-                len(max_player_level) == players
-            ), "max_player_level must be a scalar or a list of length players"
+            assert len(max_player_level) == players, (
+                "max_player_level must be a scalar or a list of length players"
+            )
             self.max_player_level = np.array(max_player_level)
         else:
             self.max_player_level = np.array([max_player_level] * players)
@@ -154,9 +154,9 @@ class ForagingEnv(gym.Env):
             for i, (min_player_level, max_player_level) in enumerate(
                 zip(self.min_player_level, self.max_player_level)
             ):
-                assert (
-                    min_player_level <= max_player_level
-                ), f"min_player_level must be less than or equal to max_player_level for each player but was {min_player_level} > {max_player_level} for player {i}"
+                assert min_player_level <= max_player_level, (
+                    f"min_player_level must be less than or equal to max_player_level for each player but was {min_player_level} > {max_player_level} for player {i}"
+                )
 
         self.sight = sight
         self.force_coop = force_coop
@@ -244,9 +244,17 @@ class ForagingEnv(gym.Env):
         low_obs = np.array(min_obs)
         high_obs = np.array(max_obs)
         assert low_obs.shape == high_obs.shape
-        return gym.spaces.Box(
-            low=low_obs, high=high_obs, shape=[len(low_obs)], dtype=np.float32
-        )
+        if not self._grid_observation:
+            return gym.spaces.Box(
+                low=low_obs, high=high_obs, shape=[len(low_obs)], dtype=np.float32
+            )
+        else:
+            return gym.spaces.Box(
+                low=low_obs,
+                high=high_obs,
+                shape=[len(low_obs), *grid_shape],
+                dtype=np.float32,
+            )
 
     @classmethod
     def from_obs(cls, obs):
@@ -573,20 +581,18 @@ class ForagingEnv(gym.Env):
             agents_bounds = [
                 get_agent_grid_bounds(*player.position) for player in self.players
             ]
-            nobs = tuple(
-                [
-                    layers[:, start_x:end_x, start_y:end_y]
-                    for start_x, end_x, start_y, end_y in agents_bounds
-                ]
-            )
+            nobs = tuple([
+                layers[:, start_x:end_x, start_y:end_y]
+                for start_x, end_x, start_y, end_y in agents_bounds
+            ])
         else:
             nobs = tuple([make_obs_array(obs) for obs in observations])
 
         # check the space of obs
         for i, obs in enumerate(nobs):
-            assert self.observation_space[i].contains(
-                obs
-            ), f"obs space error: obs: {obs}, obs_space: {self.observation_space[i]}"
+            assert self.observation_space[i].contains(obs), (
+                f"obs space error: obs: {obs}, obs_space: {self.observation_space[i]}"
+            )
 
         return nobs
 
@@ -721,7 +727,9 @@ class ForagingEnv(gym.Env):
         if not self._rendering_initialized:
             self._init_render()
 
-        return self.viewer.render(self, return_rgb_array=self.render_mode == "rgb_array")
+        return self.viewer.render(
+            self, return_rgb_array=self.render_mode == "rgb_array"
+        )
 
     def close(self):
         if self.viewer:
