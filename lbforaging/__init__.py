@@ -79,7 +79,9 @@ max_sight = 6
 
 
 def register_light_grid_envs():
-    for s, p, f, mfl, c in product(sizes, players, foods, max_food_level, coop):
+    for s, p, f, mfl, c in product(
+        small_sizes, small_players, small_foods, max_food_level, coop
+    ):
         for sight in range(1, min(s + 1, max_sight)):
             register(
                 id="Foraging-grid{4}-{0}x{0}-{1}p-{2}f{3}{5}-v3".format(
