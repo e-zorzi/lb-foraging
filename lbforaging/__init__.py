@@ -70,3 +70,38 @@ def register_grid_envs():
                     "grid_observation": True,
                 },
             )
+
+
+small_sizes = range(7, 15)
+small_players = range(2, 5)
+small_foods = range(2, 7)
+max_sight = 6
+
+
+def register_light_grid_envs():
+    for s, p, f, mfl, c in product(sizes, players, foods, max_food_level, coop):
+        for sight in range(1, min(s + 1, max_sight)):
+            register(
+                id="Foraging-grid{4}-{0}x{0}-{1}p-{2}f{3}{5}-v3".format(
+                    s,
+                    p,
+                    f,
+                    "-coop" if c else "",
+                    "" if sight == s else f"-{sight}s",
+                    "-ind" if mfl else "",
+                ),
+                entry_point="lbforaging.foraging:ForagingEnv",
+                kwargs={
+                    "players": p,
+                    "min_player_level": 1,
+                    "max_player_level": 2,
+                    "field_size": (s, s),
+                    "min_food_level": 1,
+                    "max_food_level": mfl,
+                    "max_num_food": f,
+                    "sight": sight,
+                    "max_episode_steps": 50,
+                    "force_coop": c,
+                    "grid_observation": True,
+                },
+            )
